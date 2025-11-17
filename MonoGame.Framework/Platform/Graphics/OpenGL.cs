@@ -38,7 +38,7 @@ namespace MonoGame.OpenGL
         UnsignedInt,
     }
 
-    internal enum ShaderType
+    public enum ShaderType
     {
         VertexShader = 0x8B31,
         FragmentShader = 0x8B30,
@@ -722,6 +722,24 @@ namespace MonoGame.OpenGL
         [System.Security.SuppressUnmanagedCodeSecurity()]
         [UnmanagedFunctionPointer(callingConvention)]
         [MonoNativeFunctionWrapper]
+        internal delegate void Uniform1fDelegate(int location, float value);
+        internal static Uniform1fDelegate Uniform1f;
+
+        [System.Security.SuppressUnmanagedCodeSecurity()]
+        [UnmanagedFunctionPointer(callingConvention)]
+        [MonoNativeFunctionWrapper]
+        internal unsafe delegate void Uniform3fvDelegate(int location, int size, float* values);
+        internal static Uniform3fvDelegate Uniform3fv;
+
+        [System.Security.SuppressUnmanagedCodeSecurity()]
+        [UnmanagedFunctionPointer(callingConvention)]
+        [MonoNativeFunctionWrapper]
+        internal unsafe delegate void UniformMatrix4fvDelegate(int location, int count, bool transpose, float* values);
+        internal static UniformMatrix4fvDelegate UniformMatrix4fv;
+
+        [System.Security.SuppressUnmanagedCodeSecurity()]
+        [UnmanagedFunctionPointer(callingConvention)]
+        [MonoNativeFunctionWrapper]
         internal delegate void ScissorDelegate(int x, int y, int width, int height);
         internal static ScissorDelegate Scissor;
 
@@ -1304,6 +1322,9 @@ namespace MonoGame.OpenGL
             DrawArrays = LoadFunction<DrawArraysDelegate> ("glDrawArrays");
             Uniform1i = LoadFunction<Uniform1iDelegate> ("glUniform1i");
             Uniform4fv = LoadFunction<Uniform4fvDelegate> ("glUniform4fv");
+            Uniform1f = LoadFunction<Uniform1fDelegate> ("glUniform1f");
+            Uniform3fv = LoadFunction<Uniform3fvDelegate> ("glUniform3fv");
+            UniformMatrix4fv = LoadFunction<UniformMatrix4fvDelegate> ("glUniformMatrix4fv");
             ReadPixelsInternal = LoadFunction<ReadPixelsDelegate>("glReadPixels");
 
             ReadBuffer = LoadFunction<ReadBufferDelegate> ("glReadBuffer");
@@ -1537,8 +1558,20 @@ namespace MonoGame.OpenGL
             Uniform1i(location, value);
         }
 
+        internal static void Uniform1 (int location, float value) {
+            Uniform1f(location, value);
+        }
+
+        internal static unsafe void Uniform3 (int location, int size, float* value) {
+            Uniform3fv(location, size, value);
+        }
+
         internal static unsafe void Uniform4 (int location, int size, float* value) {
             Uniform4fv(location, size, value);
+        }
+
+        internal static unsafe void UniformMatrix4 (int location, int count, bool transpose, float* value) {
+            UniformMatrix4fv(location, count, transpose, value);
         }
 
         internal unsafe static string GetString (StringName name)
@@ -1711,4 +1744,3 @@ namespace MonoGame.OpenGL
         }
     }
 }
-

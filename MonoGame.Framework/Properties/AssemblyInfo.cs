@@ -25,6 +25,9 @@ using System.Resources;
 //Tests projects need access too
 [assembly: InternalsVisibleTo("MonoGame.Tests")]
 
+// Alliance runtime needs access to GL internals for custom bindings.
+[assembly: InternalsVisibleTo("Alliance.Platforms.MonoGame")]
+
 // Setting ComVisible to false makes the types in this assembly not visible
 // to COM components.  If you need to access a type in this assembly from
 // COM, set the ComVisible attribute to true on that type.
