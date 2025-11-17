@@ -107,28 +107,7 @@ namespace Microsoft.Xna.Framework
             Sdl.SetHint("SDL_VIDEO_MINIMIZE_ON_FOCUS_LOSS", "0");
             Sdl.SetHint("SDL_JOYSTICK_ALLOW_BACKGROUND_EVENTS", "1");
 
-            // when running NUnit tests entry assembly can be null
-            var entryAssembly = Assembly.GetEntryAssembly();
-            if (entryAssembly != null)
-            {
-                using (
-                    var stream =
-                        entryAssembly.GetManifestResourceStream(entryAssembly.GetName().Name + ".Icon.bmp") ??
-                        entryAssembly.GetManifestResourceStream("Icon.bmp") ??
-                        typeof(SdlGameWindow).Assembly.GetManifestResourceStream("MonoGame.bmp"))
-                {
-                    if (stream != null)
-                        using (var br = new BinaryReader(stream))
-                        {
-                            try
-                            {
-                                var src = Sdl.RwFromMem(br.ReadBytes((int)stream.Length), (int)stream.Length);
-                                _icon = Sdl.LoadBMP_RW(src, 1);
-                            }
-                            catch { }
-                        }
-                }
-            }
+            // Hosts control their own icon; skip loading the default MonoGame resources.
 
             _handle = Sdl.Window.Create("", 0, 0,
                 GraphicsDeviceManager.DefaultBackBufferWidth, GraphicsDeviceManager.DefaultBackBufferHeight,
