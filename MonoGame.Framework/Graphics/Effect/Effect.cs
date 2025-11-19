@@ -5,6 +5,7 @@
 using System;
 using System.Diagnostics;
 using System.IO;
+using System.Text;
 using MonoGame.Framework.Utilities;
 
 namespace Microsoft.Xna.Framework.Graphics
@@ -66,6 +67,8 @@ namespace Microsoft.Xna.Framework.Graphics
         internal ConstantBuffer[] ConstantBuffers { get; private set; }
 
         private Shader[] _shaders;
+        private static readonly bool ShaderTraceEnabled =
+            string.Equals(Environment.GetEnvironmentVariable("ALLIANCE_SHADER_TRACE"), "1", StringComparison.Ordinal);
 
 	    private readonly bool _isClone;
 
@@ -125,7 +128,7 @@ namespace Microsoft.Xna.Framework.Graphics
 			// effects without any shared instance state.
  
             //Read the header
-            MGFXHeader header = ReadHeader(effectCode, index);
+            MGFXHeader header = ReadHeader(effectCode, index, count);
 			var effectKey = header.EffectKey;
 			int headerSize = header.HeaderSize;
 
@@ -155,7 +158,7 @@ namespace Microsoft.Xna.Framework.Graphics
             Clone(cloneSource);
         }
 
-        private MGFXHeader ReadHeader(byte[] effectCode, int index)
+        private MGFXHeader ReadHeader(byte[] effectCode, int index, int count)
         {
             MGFXHeader header;
             header.Signature = BitConverter.ToInt32(effectCode, index); index += 4;
@@ -164,17 +167,52 @@ namespace Microsoft.Xna.Framework.Graphics
             header.EffectKey = BitConverter.ToInt32(effectCode, index); index += 4;
             header.HeaderSize = 10;
 
+            Trace($"Effect header signature=0x{header.Signature:X8} version={header.Version} profile={header.Profile} effectKey=0x{header.EffectKey:X8} length={count}");
+
             if (header.Signature != MGFXHeader.MGFXSignature)
+            {
+                Trace($"Invalid MGFX signature. Bytes[0..16]: {DescribeBytes(effectCode, Math.Min(effectCode.Length, 16))}");
                 throw new Exception("This does not appear to be a MonoGame MGFX file!");
+            }
             if (header.Version < MGFXHeader.MGFXMinVersion)
+            {
+                Trace($"MGFX header too old (version {header.Version}, min {MGFXHeader.MGFXMinVersion}).");
                 throw new Exception("This MGFX effect is for an older release of MonoGame and needs to be rebuilt.");
+            }
             if (header.Version > MGFXHeader.MGFXVersion)
+            {
+                Trace($"MGFX header too new (version {header.Version}, current {MGFXHeader.MGFXVersion}).");
                 throw new Exception("This MGFX effect seems to be for a newer release of MonoGame.");
+            }
 
             if (header.Profile != Shader.Profile)
-                throw new Exception("This MGFX effect was built for a different platform!");          
+            {
+                Trace($"MGFX profile mismatch: effect={header.Profile} expected={Shader.Profile}.");
+                throw new Exception("This MGFX effect was built for a different platform!");
+            }
             
             return header;
+        }
+
+        private static void Trace(string message)
+        {
+            if (ShaderTraceEnabled)
+            {
+                Console.WriteLine($"[Effect] {message}");
+            }
+        }
+
+        private static string DescribeBytes(byte[] data, int count)
+        {
+            var builder = new StringBuilder();
+            for (var i = 0; i < count; i++)
+            {
+                if (i > 0)
+                    builder.Append(' ');
+                builder.AppendFormat("{0:X2}", data[i]);
+            }
+
+            return builder.ToString();
         }
 
         /// <summary>
