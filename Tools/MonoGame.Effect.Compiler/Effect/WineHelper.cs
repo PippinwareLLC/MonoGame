@@ -33,9 +33,7 @@ namespace MonoGame.Effect.Compiler
 
         static bool DetectWine()
         {
-            string[] wineCommands = RuntimeInformation.IsOSPlatform(OSPlatform.Linux) ?
-                ["wine64", "wine"] :
-                ["wine", "wine64"];
+            string[] wineCommands = ["wine64", "wine"];
             var proc = new Process();
             proc.StartInfo.Arguments = "--version";
             proc.StartInfo.UseShellExecute = false;
@@ -74,18 +72,22 @@ namespace MonoGame.Effect.Compiler
             return true;
         }
 
-        static int RunInWine(string cmd)
+        static (int ExitCode, string StdOut, string StdErr) RunInWine(string cmd)
         {
             var proc = new Process();
             proc.StartInfo.FileName = _wineExecutable;
             proc.StartInfo.Arguments = cmd;
             proc.StartInfo.CreateNoWindow = true;
-            proc.StartInfo.UseShellExecute = true;
+            proc.StartInfo.UseShellExecute = false;
+            proc.StartInfo.RedirectStandardOutput = true;
+            proc.StartInfo.RedirectStandardError = true;
 
             proc.Start();
+            var stdout = proc.StandardOutput.ReadToEnd();
+            var stderr = proc.StandardError.ReadToEnd();
             proc.WaitForExit();
 
-            return proc.ExitCode;
+            return (proc.ExitCode, stdout, stderr);
         }
 
         static string GetWinePath(string path)
@@ -112,14 +114,27 @@ namespace MonoGame.Effect.Compiler
             {
                 File.WriteAllText(srcPath, fileContents);
 
-                var cmd = $"dotnet c:\\fxccs.dll {GetWinePath(srcPath)} {shaderFunction} {shaderProfile} {(int)shaderFlags} {displayPath} {GetWinePath(dstPath)}";
+                var cmd = $"dotnet c:\\fxccs\\fxccs.dll {GetWinePath(srcPath)} {shaderFunction} {shaderProfile} {(int)shaderFlags} {displayPath} {GetWinePath(dstPath)}";
                 var result = RunInWine(cmd);
-                if (result == 0)
+                if (result.ExitCode == 0)
                 {
                     ret = new CompilationResult(new ShaderBytecode(File.ReadAllBytes(dstPath)), Result.Ok, "");
                 }
+                else
+                {
+                    throw new Exception($"FXC exited with code {result.ExitCode}: {result.StdErr}");
+                }
             }
-            catch { }
+            catch (Exception ex)
+            {
+                if (ret != null)
+                {
+                    ret.Dispose();
+                    ret = null;
+                }
+
+                throw;
+            }
 
             File.Delete(srcPath);
             File.Delete(dstPath);
