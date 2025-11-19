@@ -121,8 +121,13 @@ public class BuildContext : FrostingContext
         }
         else
         {
-            // SET MGFXC_WINE_PATH for building shaders on macOS and Linux
-            System.Environment.SetEnvironmentVariable("MGFXC_WINE_PATH", context.EnvironmentVariable("HOME") + "/.winemonogame");
+            // SET Wine prefixes for building shaders on macOS and Linux
+            var prefix = context.EnvironmentVariable("HOME") + "/.winemonogame";
+            System.Environment.SetEnvironmentVariable("ALLIANCE_FXC_WINE_PATH", prefix);
+            if (string.IsNullOrWhiteSpace(System.Environment.GetEnvironmentVariable("MGFXC_WINE_PATH")))
+            {
+                System.Environment.SetEnvironmentVariable("MGFXC_WINE_PATH", prefix);
+            }
         }
 
         context.CreateDirectory(BuildOutput);

@@ -53,9 +53,9 @@ FIREFOX_URL="https://download-installer.cdn.mozilla.net/pub/firefox/releases/62.
 curl $FIREFOX_URL --output "$SCRIPT_DIR/firefox.exe"
 7z e "$SCRIPT_DIR/firefox.exe" "core/d3dcompiler_47.dll" -o"$WINEPREFIX/drive_c/windows/system32/" -aoa
 
-# append MGFXC_WINE_PATH env variable
-echo -e "\nexport MGFXC_WINE_PATH=$HOME/.winemonogame" >> ~/.profile
-echo -e "\nexport MGFXC_WINE_PATH=$HOME/.winemonogame" >> ~/.zprofile
+# append ALLIANCE_FXC_WINE_PATH env variable
+echo -e "\nexport ALLIANCE_FXC_WINE_PATH=$HOME/.winemonogame" >> ~/.profile
+echo -e "\nexport ALLIANCE_FXC_WINE_PATH=$HOME/.winemonogame" >> ~/.zprofile
 
 # cleanup
 rm -rf "$SCRIPT_DIR"
